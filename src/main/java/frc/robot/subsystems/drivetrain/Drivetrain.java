@@ -1,18 +1,14 @@
 package frc.robot.subsystems.drivetrain;
 
-import java.util.concurrent.ThreadLocalRandom;
-
-import javax.swing.LayoutStyle;
-
 import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.RelativeEncoder;
-import com.revrobotics.CANSparkMax.ControlType;
 import com.revrobotics.CANSparkMax.IdleMode;
 
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
@@ -21,11 +17,12 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import frc.robot.Constants.Drivetrain.RightMotors;
+import frc.robot.util.DriveFollower;
 import frc.robot.util.Encoder;
 import frc.robot.util.DriverController.Mode;
+import frc.robot.util.enums.Displacement;
+import frc.robot.util.limelight.LimelightAPI;
 import edu.wpi.first.wpilibj.SPI;
-import frc.robot.util.DriverController;
 
 public class Drivetrain extends SubsystemBase {
     private final CANSparkMax leftMotor1 = new CANSparkMax(Constants.Drivetrain.LeftMotors.kLeftMotor1_Port, CANSparkMaxLowLevel.MotorType.kBrushless);
@@ -33,7 +30,9 @@ public class Drivetrain extends SubsystemBase {
     private final CANSparkMax leftMotor3 = new CANSparkMax(Constants.Drivetrain.LeftMotors.kLeftMotor3_Port, CANSparkMaxLowLevel.MotorType.kBrushless);
 
     public final MotorControllerGroup leftMotors = new MotorControllerGroup(
-            leftMotor1, leftMotor2, leftMotor3
+            leftMotor1, 
+            // leftMotor2, 
+            leftMotor3
     );
 
     private final CANSparkMax rightMotor1 = new CANSparkMax(Constants.Drivetrain.RightMotors.kRightMotor1_Port, CANSparkMaxLowLevel.MotorType.kBrushless);
@@ -41,7 +40,9 @@ public class Drivetrain extends SubsystemBase {
     private final CANSparkMax rightMotor3 = new CANSparkMax(Constants.Drivetrain.RightMotors.kRightMotor3_Port, CANSparkMaxLowLevel.MotorType.kBrushless);
 
     public final MotorControllerGroup rightMotors = new MotorControllerGroup(
-            rightMotor1, rightMotor2, rightMotor3
+            rightMotor1, 
+            // rightMotor2, 
+            rightMotor3
     );
 
     private final DifferentialDrive difDrive = new DifferentialDrive(leftMotors, rightMotors);
@@ -60,6 +61,14 @@ public class Drivetrain extends SubsystemBase {
     private final SlewRateLimiter throttleBackwardFilter = new SlewRateLimiter(Constants.Drivetrain.kBackwardThrottleAccelFilter, -Constants.Drivetrain.kBackwardThrottleDecelFilter,0);
     private final SlewRateLimiter turnFilter = new SlewRateLimiter(Constants.Drivetrain.kTurnFilter);
 
+    private final DriveFollower driveFollower; 
+
+    public boolean isAutoSteer = false; 
+
+    // private final PIDController throttlePID = new PIDController(.15, 0.00, 0.0);
+    // private final PIDController throttlePID2 = new PIDController(.25, 0.00, 0.0);
+    // private final PIDController steeringPID = new PIDController(.3, 0.00, 0.03);
+
     public Drivetrain(){
         rightMotor1.setInverted(true);
         rightMotor2.setInverted(true);
@@ -70,11 +79,11 @@ public class Drivetrain extends SubsystemBase {
         leftMotor3.setInverted(false);
 
         leftMotor1.setIdleMode(IdleMode.kBrake);
-        leftMotor2.setIdleMode(IdleMode.kBrake);
+        leftMotor2.setIdleMode(IdleMode.kCoast);
         leftMotor3.setIdleMode(IdleMode.kBrake);
 
         rightMotor1.setIdleMode(IdleMode.kBrake);
-        rightMotor2.setIdleMode(IdleMode.kBrake);
+        rightMotor2.setIdleMode(IdleMode.kCoast);
         rightMotor3.setIdleMode(IdleMode.kBrake);
 
 
@@ -104,6 +113,8 @@ public class Drivetrain extends SubsystemBase {
 
         odometry = new DifferentialDriveOdometry(gyro.getRotation2d(), leftEncoder.getPosition(), rightEncoder.getPosition());
 
+        this.driveFollower = new DriveFollower(this); 
+
         //initDefaultCommand(driverController);
     }
 
@@ -127,7 +138,11 @@ public class Drivetrain extends SubsystemBase {
 
     // Returns the current speed of the wheels of the robot.
     public DifferentialDriveWheelSpeeds getWheelSpeeds() {
-        return new DifferentialDriveWheelSpeeds(leftEncoder.getEncoder().getVelocity(), -rightEncoder.getEncoder().getVelocity());
+        return new DifferentialDriveWheelSpeeds(leftEncoder.getEncoder().getVelocity(), rightEncoder.getEncoder().getVelocity());
+    }
+
+    public ChassisSpeeds getChassisSpeeds() {
+        return Constants.Trajectory.kDriveKinematics.toChassisSpeeds(getWheelSpeeds()); 
     }
 
     // Resets the odometry, both rotation and distance traveled.
@@ -144,6 +159,10 @@ public class Drivetrain extends SubsystemBase {
 
     // private double lastNonzeroThrottle = 0;
     private double lastEffThrottle = 0; 
+
+    public void rawCurvatureDrive(double throttle, double turn, boolean turnInPlace) {
+        difDrive.curvatureDrive(throttle, turn, turnInPlace);
+    }
 
     // Drives the robot with arcade controls.
     public void curvatureDrive(double throttle, double turn, Mode mode) {
@@ -178,12 +197,38 @@ public class Drivetrain extends SubsystemBase {
         // if (lastNonzeroThrottle != 0)
         lastEffThrottle = effThrottle; 
 
+        SmartDashboard.putBoolean("is quickturning", Math.abs(effThrottle) < 0.05); 
+
         difDrive.curvatureDrive(effThrottle, 
         turnFilter.calculate(turn), 
-        Math.abs(throttle) < 0.05);
-        // if (throttle == 0 && turn == 0) {
-        //     tankDriveVolts(0, 0);
-        // }
+        Math.abs(effThrottle) < 0.05);
+    }
+
+    public void autoSteerCurvatureDrive(double throttle, Mode mode, Pose2d aprilTagPose) { // aprilTagPose = pose relative to robot
+        double turnPower = aprilTagPose.getY() * Constants.GridAlign.kSteer * (throttle != 0 ? throttle : 0.25);
+
+        curvatureDrive(throttle, turnPower, mode);
+
+        // double curvature = ParametricSpline.fromWaypoints(new Waypoint[] {
+        //     new Waypoint(0, 0, 0, 1, 1), 
+        //     new Waypoint(aprilTagPose.getX(), aprilTagPose.getY(), aprilTagPose.getRotation().getDegrees(), 1, 1)
+        // }).signedCurvatureAt(0); 
+
+        // double velocity = throttle * RobotDriveBase.kDefaultMaxOutput / Constants.Trajectory.ksVoltSecondsPerMeter; 
+        
+        // ChassisSpeeds newSpeeds = new ChassisSpeeds(velocity, 0, velocity * curvature); 
+        // Voltage voltages = driveFollower.calculate(newSpeeds); 
+        // tankDriveVolts(voltages.getLeft(), voltages.getRight());
+    }
+
+    public void drive(double throttle, double turn, Mode mode) {
+        Pose2d pose = LimelightAPI.adjustCamPose(Displacement.kCenter); 
+
+        if (isAutoSteer && pose != null) {
+            autoSteerCurvatureDrive(throttle, mode, pose);
+        } else {
+            curvatureDrive(throttle, turn, mode);
+        }
     }
 
     // Controls the left and right side motors directly with voltage.
@@ -247,4 +292,7 @@ public class Drivetrain extends SubsystemBase {
         return this.m_field; 
     }
     
+    public DriveFollower getDriveFollower() {
+        return driveFollower; 
+    }
 }

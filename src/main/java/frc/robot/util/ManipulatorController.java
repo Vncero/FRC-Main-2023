@@ -4,15 +4,25 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 
 public class ManipulatorController extends Controller {
 
-    public Trigger intakeElementTrigger; 
-    public Trigger outtakeElementTrigger; 
-    public Trigger intakeOffTrigger; 
+    public Trigger intakeElementTriggerFast; 
+    public Trigger outtakeElementTriggerFast;
+
+    public Trigger intakeElementTriggerSlow; 
+    public Trigger outtakeElementTriggerSlow;
+
+    public Trigger dPadUp;
+    public Trigger dPadDown;
 
     public ManipulatorController(int port) {
         super(port);
+        
+        this.outtakeElementTriggerFast = new Trigger(() -> -getRightStickY() > 0.2);
+        this.intakeElementTriggerFast = new Trigger(() -> -getRightStickY() < -0.2);
 
-        this.intakeElementTrigger = new Trigger(() -> -getLeftStickY() > 0.2);
-        this.outtakeElementTrigger = new Trigger(() -> -getLeftStickY() < -0.2);
-        this.intakeOffTrigger = new Trigger(() -> -getLeftStickY() > -0.2 && -getLeftStickY() < 0.2); 
+        this.outtakeElementTriggerSlow = new Trigger(() -> -getLeftStickY() > 0.2);
+        this.intakeElementTriggerSlow = new Trigger(() -> -getLeftStickY() < -0.2);
+
+        this.dPadUp = new Trigger(() -> this.dPadAngle() == 0);
+        this.dPadDown = new Trigger(() -> this.dPadAngle() == 180);
     }
 }
