@@ -12,10 +12,12 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import frc.robot.Constants;
 
 public class Arm extends SubsystemBase {
-   // TODO: ideally privatize these for semantics, but not super important
    public CANSparkMax anchorMotor, floatingMotor;
    public RelativeEncoder anchorEncoder, floatingEncoder;
    public SparkMaxPIDController anchorPIDController, floatingPIDController;
+
+   public double anchorSetpoint = Constants.Arm.Anchor.kContracted;
+   public double floatingSetpoint = Constants.Arm.Floating.kContracted;
 
    // TODO: port error, uncomment when limit switches actually exist
    // public DigitalInput anchorLimitSwitch, floatingLimitSwitch;
@@ -36,24 +38,23 @@ public class Arm extends SubsystemBase {
 
       this.configureControllers();
 
-      this.initTuneControllers();
+      // this.initTuneControllers();
    }
 
    public void configureMotors() {
       this.anchorMotor.setInverted(Constants.Arm.Anchor.kInverted);
       this.floatingMotor.setInverted(Constants.Arm.Anchor.kInverted);
 
-      // TODO: uncomment once we validate encoders will enforce this meaningfully
-      // Set Limits for angles which arms can  go to 
-      //   this.anchorMotor.setSoftLimit(SoftLimitDirection.kReverse, (float) Constants.Arm.Anchor.kMinAngle);
-      //   this.anchorMotor.setSoftLimit(SoftLimitDirection.kForward, (float) Constants.Arm.Anchor.kMaxAngle);
-      //   this.anchorMotor.enableSoftLimit(SoftLimitDirection.kReverse, true);
-      //   this.anchorMotor.enableSoftLimit(SoftLimitDirection.kForward, true);
-      
-      //   this.floatingMotor.setSoftLimit(SoftLimitDirection.kReverse, (float) Constants.Arm.Floating.kMinAngle);
-      //   this.floatingMotor.setSoftLimit(SoftLimitDirection.kForward, (float) Constants.Arm.Floating.kMaxAngle);
-      //   this.floatingMotor.enableSoftLimit(SoftLimitDirection.kReverse, true);
-      //   this.floatingMotor.enableSoftLimit(SoftLimitDirection.kForward, true);
+      // TODO: test these
+      this.anchorMotor.setSoftLimit(SoftLimitDirection.kReverse, (float) Constants.Arm.Anchor.kMinAngle);
+      this.anchorMotor.setSoftLimit(SoftLimitDirection.kForward, (float) Constants.Arm.Anchor.kMaxAngle);
+      this.anchorMotor.enableSoftLimit(SoftLimitDirection.kReverse, true);
+      this.anchorMotor.enableSoftLimit(SoftLimitDirection.kForward, true);
+   
+      this.floatingMotor.setSoftLimit(SoftLimitDirection.kReverse, (float) Constants.Arm.Floating.kMinAngle);
+      this.floatingMotor.setSoftLimit(SoftLimitDirection.kForward, (float) Constants.Arm.Floating.kMaxAngle);
+      this.floatingMotor.enableSoftLimit(SoftLimitDirection.kReverse, true);
+      this.floatingMotor.enableSoftLimit(SoftLimitDirection.kForward, true);
    }
 
    public void configureEncoders(){
@@ -113,19 +114,19 @@ public class Arm extends SubsystemBase {
    // TODO: double check formula transcription and maybe try to break it up
    //finds the two angles for the arm - will be above the line from joint to obj
    //angle calculated from joint so maybe change to arm 2 horizontal
-   public double[] calculateAngles(double dy, double dz) {
-      double adjustedY = dy - Constants.Arm.Misc.distanceBetweenPivotLimelight;
+   // public double[] calculateAngles(double dy, double dz) {
+   //    double adjustedY = dy - Constants.Arm.Misc.distanceBetweenPivotLimelight;
 
-      double distanceToObj = Math.sqrt(adjustedY * adjustedY + dz * dz);
-      double alpha = Math.acos((Constants.Arm.Floating.kLength * Constants.Arm.Floating.kLength + distanceToObj * distanceToObj - Constants.Arm.Anchor.kLength * Constants.Arm.Anchor.kLength) / (2 * Constants.Arm.Anchor.kLength * distanceToObj));
-      double gamma = Math.atan2(adjustedY, dz);
+   //    double distanceToObj = Math.sqrt(adjustedY * adjustedY + dz * dz);
+   //    double alpha = Math.acos((Constants.Arm.Floating.kLength * Constants.Arm.Floating.kLength + distanceToObj * distanceToObj - Constants.Arm.Anchor.kLength * Constants.Arm.Anchor.kLength) / (2 * Constants.Arm.Anchor.kLength * distanceToObj));
+   //    double gamma = Math.atan2(adjustedY, dz);
 
-      double[] angles = new double[2];
-      angles[0] = alpha + gamma;
-      angles[1] = Math.PI - Math.acos((Constants.Arm.Anchor.kLength * Constants.Arm.Anchor.kLength + Constants.Arm.Floating.kLength * Constants.Arm.Floating.kLength - distanceToObj * distanceToObj) / (2 * Constants.Arm.Anchor.kLength * Constants.Arm.Floating.kLength));
+   //    double[] angles = new double[2];
+   //    angles[0] = alpha + gamma;
+   //    angles[1] = Math.PI - Math.acos((Constants.Arm.Anchor.kLength * Constants.Arm.Anchor.kLength + Constants.Arm.Floating.kLength * Constants.Arm.Floating.kLength - distanceToObj * distanceToObj) / (2 * Constants.Arm.Anchor.kLength * Constants.Arm.Floating.kLength));
       
-      return angles;
-   }
+   //    return angles;
+   // }
 
    public double getAnchorAngle() {
       return this.anchorEncoder.getPosition();
@@ -154,9 +155,9 @@ public class Arm extends SubsystemBase {
    @Override
    public void periodic(){
       // TODO: comment out tuneControllers() at comp
-      tuneControllers();
+      // tuneControllers();
 
-      SmartDashboard.putNumber("Anchor  Angle", this.getAnchorAngle());
+      SmartDashboard.putNumber("Anchor Angle", this.getAnchorAngle());
       SmartDashboard.putNumber("Floating Angle", this.getFloatingAngle());
    }
 }

@@ -7,31 +7,26 @@ import frc.robot.trajectory.TrajectoryCreator;
 
 public final class Constants {
     public static final class Arm {
-        // L1
         public static final class Anchor {
             public static final boolean kInverted = true;
-            public static final double kRatio = (90.0 - 13.0) / (27.0); // TODO: this probably isn't correct because of gearing
+            public static final double kRatio = (90.0 - 13.0) / (27.0);
 
-            public static double kP = 0.015;
+            public static final double kP = 0.015;
             public static final double kI = 0.0;
             public static final double kD = 0.0;
-            public static double kFF = 0.05;
+            public static final double kFF = 0.042;
             public static double kErrorThreshold = 2.0;
 
-            // TODO: this doesn't sound right?
             public static final double kContracted = 13.0;
             public static final double kMinAngle = 13.0;
-            public static final double kMaxAngle = 85.0;
-
-            public static final double kLength = 101.6;
+            public static final double kMaxAngle = 85.0; // TODO: idk about this one
         }
 
-        // L2
         public static final class Floating {
             public static final boolean kInverted = true;
-            public static final double kRatio = 360.0/72; // TODO: this probably isn't correct because of gearing
+            public static final double kRatio = 360.0/72;
 
-            public static final double kP = 0.001;
+            public static final double kP = 0.01;
             public static final double kI = 0.0;
             public static final double kD = 0.0;
             public static final double kFF = 0.0;
@@ -40,8 +35,6 @@ public final class Constants {
             public static final double kContracted = 22.0;
             public static final double kMinAngle = 22.0;
             public static final double kMaxAngle = 180.0;
-
-            public static final double kLength = 43.18; // TODO: might have to remeasure
         }
 
         public static final class Ports {
@@ -51,45 +44,43 @@ public final class Constants {
             public static final int kFloatingLimitSwitchPort = 0;
         }
 
-        // TODO: calculate these or do it dynamically, but something needs to happen with them
-        // TODO: if we do these statically, create a "ArmState" wrapper
         public static final class Positions {
-            public static final double kLowFloating = 0.0;
-            public static final double kLowAnchor = 0.0;
-            public static final double kMidNodeFloating = 0.0;
-            public static final double kMidNodeAnchor = 0.0;
-            public static final double kMidShelfFloating = 0.0;
-            public static final double kMidShelfAnchor = 0.0;
-            public static final double kHighNodeFloating = 0.0;
-            public static final double kHighNodeAnchor = 0.0;
-            public static final double kHighShelfFloating = 0.0;
-            public static final double kHighShelfAnchor = 0.0;
-            public static final double kIntakeShelfFloating = 0.0;
-            public static final double kIntakeShelfAnchor = 0.0; 
+            public static final class Contracted {
+                public static final double kAnchor = 13.0;
+                public static final double kFloating = 22.0;
+            }
+
+            public static final class Ground {
+                public static final double kAnchor = 13.0;
+                public static final double kFloating = 92.0;
+            }
+
+            // TODO: all of the below positions
+
+            // human player station
+            public static final class Shelf {
+                public static final double kAnchor = 0.0;
+                public static final double kFloating = 0.0;
+            }
+
+            // cube upper shelf
+            public static final class Cube {
+                public static final double kAnchor = 0.0;
+                public static final double kFloating = 0.0;
+            }
+
+            // cone middle shelf
+            public static final class MiddleCone {
+                public static final double kAnchor = 0.0;
+                public static final double kFloating = 0.0;
+            }
+
+            // cone high shelf
+            public static final class HighCone {
+                public static final double kAnchor = 0.0;
+                public static final double kFloating = 0.0;
+            }
         }
-
-        // public enum ArmState {
-        //     LOW(0, 0),
-        //     MID(0, 0), 
-        //     HIGH(0, 0), 
-        //     INTAKE(0, 0); 
-
-        //     private final double floating; 
-        //     private final double anchor; 
-
-        //     ArmState(double floating, double anchor) {
-        //         this.floating = floating; 
-        //         this.anchor = anchor; 
-        //     }
-
-        //     public double getFloating() {
-        //         return floating; 
-        //     }
-
-        //     public double getAnchor() {
-        //         return anchor; 
-        //     }
-        // }
         
         public static final class Misc {
             public static final double kUndershotAngle = 0.0;
@@ -98,26 +89,11 @@ public final class Constants {
         }
     }
 
-    public static class Grabber {
-        public static int kPistonDeploy = 0;
-        public static int kPistonRetract = 1;
-        public static int kGrabberSensor;
-        public static int kBits;
-        public static int kChannel;
-        public static double kMax;
-        public static double kStart;
-        public static double kMin;
-    }
-
     public static class Intake {
-        public static int kPort = 24; 
-        public static double kForwardPower = 0.7;
-        public static double kBackwardPower = -0.7;
-
-        public static double kAutoIntakeSeconds = 1;
-        public static double kAutoOuttakeSeconds = 1;
+        public static int kPort = 24;
+        public static double kForwardPower = 0.8;
+        public static double kBackwardPower = -0.8;
     }
-
 
     public static class Trajectory {
         public static final double ksVolts = 0.23636;
@@ -125,7 +101,7 @@ public final class Constants {
         public static final double kaVoltSecondsSquaredPerMeter = 0.35086;
 
         public static final double kMaxSpeedMetersPerSecond = 2.5;
-        public static final double kMaxAccelerationMetersPerSecondSquared = 0.8;
+        public static final double kMaxAccelerationMetersPerSecondSquared = 0.8; // 2
 
         public static final double kMaxVoltage = 10;
 
@@ -185,16 +161,16 @@ public final class Constants {
         }
 
         public static final int kMaxAmps = 30; 
-        public static final double kThrottleMultiplier = 0.70;
-        public static final double kTurnMultiplier = 0.5;
+        public static final double kThrottleMultiplier = 0.75;
+        public static final double kTurnMultiplier = 0.3;
         public static final double kThrottleMultiplierSM = 0.2;
-        public static final double kTurnMultiplierSM = 0.3;
+        public static final double kTurnMultiplierSM = 0.15;
 
         public static final double kForwardThrottleAccelFilter = 0.85;
-        public static final double kForwardThrottleDecelFilter = 0.8;
+        public static final double kForwardThrottleDecelFilter = 0.80;
         public static final double kBackwardThrottleAccelFilter = 0.85;
-        public static final double kBackwardThrottleDecelFilter = 0.8;
-        public static final double kTurnFilter = 3;
+        public static final double kBackwardThrottleDecelFilter = 0.80;
+        public static final double kTurnFilter = 1.5;
     }
 
     public static class Balance {
