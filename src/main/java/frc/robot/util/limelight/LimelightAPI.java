@@ -112,7 +112,7 @@ public class LimelightAPI {
         double dZ = camPose.getY() + 0.69 * 0.420;
         double dX = camPose.getX() + displacement.getOffset();
 
-        double actualRot = (Math.signum(dX)) * camPose.getRotation().getRadians();
+        double actualRot = Math.signum(dX) * camPose.getRotation().getRadians();
 
         var camPose2 = LimelightAPI.targetPoseBotSpace(); 
 
@@ -130,6 +130,27 @@ public class LimelightAPI {
         double adjustedZ = (-(distance * Math.sin(theta)) - Constants.GridAlign.kAdjustZ * Math.sin(actualRot));
 
         return new Pose2d(adjustedX, adjustedZ, new Rotation2d(actualRot));
+    }
+
+    public static Pose2d getOffsetTargetPose(double epsilon, double delta) { // x, y offsets (with respect to target, Cartesian)
+        Pose2d targetPose = targetPoseBotSpace();
+        Pose2d camPose = camPose(); // target space
+
+        double theta = camPose.getRotation().getRadians();
+        double alpha = targetPose.getRotation().getRadians();
+
+        double phi = -Math.signum(camPose.getX()) * (Math.PI - (theta + alpha));
+
+        // to reinterpret epsilon & delta in robot space, rotate by phi, the angle between the axes of target & robot space
+        // as a side effect, the coordinates are switched i.e. horizontal motion in robot space is y as opposed to x (and vice versa, more or less)
+        double rotatedEpsilon = epsilon * Math.cos(phi) - delta * Math.sin(phi);
+        double rotatedDelta = epsilon * Math.sin(phi) + delta * Math.cos(phi);
+
+        double adjustedX = targetPose.getX() + rotatedEpsilon;
+        double adjustedY = targetPose.getY() + rotatedDelta;
+
+        // as a final touch, adjust sign of horizontal motion to accommodate for transition between Limelight robot space and WPILib robot space
+        return new Pose2d(adjustedX, -adjustedY, targetPose.getRotation());
     }
 
     public static boolean validTargets() {

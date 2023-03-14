@@ -16,16 +16,16 @@ public class PoseUtil {
         SizedQueue<Pose2d> poses = posesRaw; // sanitizePoses(posesRaw);
 
         Translation2d avgTranslation = poses.stream()
-            .map(pose -> pose.getTranslation())
-            .reduce(new Translation2d(), (prev, curr) -> prev.plus(curr))
+            .map(Pose2d::getTranslation)
+            .reduce(new Translation2d(), Translation2d::plus)
             .div(poses.size());
 
         Rotation2d avgRotation = poses.stream()
-            .map(pose -> pose.getRotation())
-            .reduce(new Rotation2d(), (prev, curr) -> prev.plus(curr))
+            .map(Pose2d::getRotation)
+            .reduce(new Rotation2d(), Rotation2d::plus)
             .div(poses.size());
 
-        return new Pose2d(avgTranslation.getX(), avgTranslation.getY(), avgRotation);
+        return new Pose2d(avgTranslation, avgRotation);
     }
 
     public static Pose2d averagePipelinePoses(ArrayList<Pose2d> poses) {
@@ -33,16 +33,16 @@ public class PoseUtil {
         // List<Pose2d> poses = sanitizePosesList(posesRaw);
 
         Translation2d avgTranslation = poses.stream()
-            .map(pose -> pose.getTranslation())
-            .reduce(new Translation2d(), (prev, curr) -> prev.plus(curr))
+            .map(Pose2d::getTranslation)
+            .reduce(new Translation2d(), Translation2d::plus)
             .div(poses.size());
 
         Rotation2d avgRotation = poses.stream()
-            .map(pose -> pose.getRotation())
-            .reduce(new Rotation2d(), (prev, curr) -> prev.plus(curr))
+            .map(Pose2d::getRotation)
+            .reduce(new Rotation2d(), Rotation2d::plus)
             .div(poses.size());
 
-        return new Pose2d(avgTranslation.getX(), avgTranslation.getY(), avgRotation);
+        return new Pose2d(avgTranslation, avgRotation);
     }
 
     public static SizedQueue<Pose2d> sanitizePoses(SizedQueue<Pose2d> poses) {
@@ -56,9 +56,7 @@ public class PoseUtil {
 
         SizedQueue<Pose2d> queue = new SizedQueue<>(3);
 
-        for (int i = 0; i < filteredPoses.size(); i++) {
-            queue.add(filteredPoses.get(i));
-        }
+        queue.addAll(filteredPoses);
 
         return queue;
     }

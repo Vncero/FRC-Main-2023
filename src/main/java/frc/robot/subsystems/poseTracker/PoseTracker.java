@@ -17,15 +17,15 @@ import frc.robot.util.enums.Displacement;
 import frc.robot.util.limelight.LimelightAPI;
 
 public class PoseTracker extends SubsystemBase {
-        // Getting last 3 camera pose values
-        private SizedQueue<Pose2d> camPoseQueue = new SizedQueue<Pose2d>(3);
+    // Getting last 3 camera pose values
+    private SizedQueue<Pose2d> camPoseQueue = new SizedQueue<Pose2d>(3);
 
-        // Getting last 3 bot pose values
-        private SizedQueue<Pose2d> botPoseQueue = new SizedQueue<Pose2d>(3);
+    // Getting last 3 bot pose values
+    private SizedQueue<Pose2d> botPoseQueue = new SizedQueue<Pose2d>(3);
 
     private Pose2d avgPythonCamPose;
 
-        private Pose2d avgAprilTagCamPose;
+    private Pose2d avgAprilTagCamPose;
 
     public Displacement displacement = Displacement.kCenter;
 
@@ -45,22 +45,15 @@ public class PoseTracker extends SubsystemBase {
         SmartDashboard.putNumber("avg rotation", avgAprilTagCamPose.getRotation().getDegrees());
     }
 
-        // TODO: are we scrapping this? definitely something to discuss
-        public Pose2d getSensorFusionAverage() {
-                return PoseUtil.averagePipelinePoses(new ArrayList<>(List.of(avgAprilTagCamPose, avgPythonCamPose)));
-        }
+    // TODO: are we scrapping this? definitely something to discuss
+    public Pose2d getSensorFusionAverage() {
+        return PoseUtil.averagePipelinePoses(new ArrayList<>(List.of(avgAprilTagCamPose, avgPythonCamPose)));
+    }
 
-        public void clearAndSetPipeline(PipelineIndex index) {
-                this.camPoseQueue.clear();
-                this.botPoseQueue.clear();
-
-                LimelightAPI.setPipeline(index.getValue());
-        }
-
-        public Pose2d getAverageAprilPose() {
-                // return LimelightAPI.adjustCamPose();
-                return PoseUtil.averagePoses(this.camPoseQueue);
-        }
+    public Pose2d getAverageAprilPose() {
+        // return LimelightAPI.adjustCamPose();
+        return PoseUtil.averagePoses(this.camPoseQueue);
+    }
 
     public Waypoint[] generateWaypoints() {
         Pose2d pose = this.getAverageAprilPose();
@@ -74,6 +67,6 @@ public class PoseTracker extends SubsystemBase {
             new Waypoint(pose.getX(), pose.getY(), pose.getRotation().getRadians(), weight, 1)
         };
 
-        return waypoints; 
+        return waypoints;
     }
 }

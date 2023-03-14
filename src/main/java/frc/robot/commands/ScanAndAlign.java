@@ -14,9 +14,7 @@ import frc.robot.util.enums.Displacement;
 public class ScanAndAlign extends SequentialCommandGroup {
     public ScanAndAlign(Drivetrain drivetrain, Arm arm, PoseTracker poseTracker, ManipulatorController controller){
         addCommands(
-            new InstantCommand(() -> {
-                poseTracker.displacement = controller.dPadAngle() == 270 ? Displacement.kLeft : controller.dPadAngle() == 90 ? Displacement.kRight : Displacement.kCenter;
-            }),
+            new InstantCommand(() -> poseTracker.displacement = controller.dPadAngle() == 270 ? Displacement.kLeft : controller.dPadAngle() == 90 ? Displacement.kRight : Displacement.kCenter),
             new MoveToPos(arm, Constants.Arm.Position.GROUND),
             new WaitCommand(0.3),
             new GridAlign(drivetrain, poseTracker)
