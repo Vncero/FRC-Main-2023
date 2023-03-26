@@ -18,7 +18,7 @@ import frc.robot.Constants.Arm.Position;
 public class Arm extends SubsystemBase {
    public CANSparkMax anchorMotor, floatingMotor;
    public RelativeEncoder anchorEncoder, floatingEncoder;
-   public SparkMaxPIDController floatingPIDController;
+   public SparkMaxPIDController anchorPIDController, floatingPIDController;
 
    public double anchorSetpoint = Constants.Arm.Anchor.kContracted;
    public double floatingSetpoint = Constants.Arm.Floating.kContracted;
@@ -33,10 +33,11 @@ public class Arm extends SubsystemBase {
       this.floatingMotor = new CANSparkMax(Constants.Arm.Ports.kFloatingPort, CANSparkMax.MotorType.kBrushless);
       this.configureMotors();
 
-      this.anchorEncoder = this.anchorMotor.getAlternateEncoder(Type.kQuadrature, 8192); // this.anchorMotor.getEncoder();
+      this.anchorEncoder = this.anchorMotor.getEncoder(); ; // this.anchorMotor.getAlternateEncoder(Type.kQuadrature, 8192); 
       this.floatingEncoder = this.floatingMotor.getAlternateEncoder(Type.kQuadrature, 8192); // this.floatingMotor.getEncoder();
       this.configureEncoders();
 
+      this.anchorPIDController = this.anchorMotor.getPIDController(); 
       this.floatingPIDController = this.floatingMotor.getPIDController();
       this.configureControllers();
 
@@ -87,18 +88,25 @@ public class Arm extends SubsystemBase {
    public void configureEncoders() {
       this.anchorEncoder.setPositionConversionFactor(Constants.Arm.Anchor.kRatio);
       this.floatingEncoder.setPositionConversionFactor(Constants.Arm.Floating.kRatio);
-      this.anchorEncoder.setInverted(true); 
+      // this.anchorEncoder.setInverted(true); 
 
       this.anchorEncoder.setPosition(Constants.Arm.Anchor.kContracted);
       this.floatingEncoder.setPosition(Constants.Arm.Floating.kContracted);
    }
 
    public void configureControllers() {
+      // this.anchorPIDController.setP(Constants.Arm.Anchor.kP);
+      // this.anchorPIDController.setI(Constants.Arm.Anchor.kI);
+      // this.anchorPIDController.setD(Constants.Arm.Anchor.kD);
+      // this.anchorPIDController.setFF(Constants.Arm.Anchor.kFF);
       this.floatingPIDController.setP(Constants.Arm.Floating.kP);
       this.floatingPIDController.setI(Constants.Arm.Floating.kI);
       this.floatingPIDController.setD(Constants.Arm.Floating.kD);
       this.floatingPIDController.setFF(Constants.Arm.Floating.kFF);
 
+      this.floatingPIDController.setOutputRange(-0.3, 0.4);
+
+      // this.anchorPIDController.setFeedbackDevice(anchorEncoder);
       this.floatingPIDController.setFeedbackDevice(floatingEncoder); 
    }
 
@@ -128,6 +136,10 @@ public class Arm extends SubsystemBase {
       this.floatingPIDController.setI(floatingKI);
       this.floatingPIDController.setD(floatingKD);
       this.floatingPIDController.setFF(floatingKFF);
+      // this.anchorPIDController.setP(anchorKP);
+      // this.anchorPIDController.setI(anchorKI);
+      // this.anchorPIDController.setD(anchorKD);
+      // this.anchorPIDController.setFF(anchorKFF);
    }
 
    public double getAnchorAngle() {
@@ -137,6 +149,10 @@ public class Arm extends SubsystemBase {
    public double getFloatingAngle() {
       return this.floatingEncoder.getPosition();
    }
+
+   // public void setAnchorAngle(double anchorAngle) {
+   //    this.anchorPIDController.setReference(anchorAngle, CANSparkMax.ControlType.kPosition);
+   // }
 
    public void setFloatingAngle(double floatingAngle) {
       this.floatingPIDController.setReference(floatingAngle, CANSparkMax.ControlType.kPosition);
@@ -159,9 +175,9 @@ public class Arm extends SubsystemBase {
       // TODO: comment out tuneControllers() at comp
       // tuneControllers();
 
-      if(this.anchorLimitSwitch.get()) {
-         this.anchorEncoder.setPosition(Constants.Arm.Anchor.kContracted);
-      }
+      // if(this.anchorLimitSwitch.get()) {
+      //    this.anchorEncoder.setPosition(Constants.Arm.Anchor.kContracted);
+      // }
 
       SmartDashboard.putBoolean("on cube", this.armMode);
 
