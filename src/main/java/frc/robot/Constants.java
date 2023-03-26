@@ -34,6 +34,8 @@ public final class Constants {
             public static final double kD = 0.0;
             public static final double kFF = 0.0;
             public static double kErrorThreshold = 5.0;
+            public static double kMaxDownwardOutput = -0.5;
+            public static double kMaxUpwardOutput = 0.5;
 
             public static final double kContracted = 22.0;
             public static final double kMinAngle = 22.0;
@@ -43,7 +45,7 @@ public final class Constants {
         public static final class Ports {
             public static final int kAnchorPort = 22;
             public static final int kFloatingPort = 23;
-            public static final int kAnchorLimitSwitchPort = 9;
+            public static final int kAnchorLimitSwitchPort = 0;
             public static final int kFloatingLimitSwitchPort = 0;
         }
 
@@ -51,7 +53,7 @@ public final class Constants {
             // TODO: added 3 to all anchor setpoints because of change from 13 to 16, look into the validity of setpoints after this change
             
             CONTRACTED(16.0, 22.0), 
-            GROUND(16.0, 113.0), 
+            GROUND(16.0, 113.0), // 113
 
             MID_CUBE(16.0, 40.0),
             HIGH_CUBE(55.0, 82.0),
@@ -62,8 +64,8 @@ public final class Constants {
             MID_CONE(55.0, 95.0),
             MID_CONE_AIMING(55.0, 22.0),
 
-            SHELF(87.0, 111.0), 
-            STATION(16.0, 14.0);
+            SHELF(90.0, 140.0), 
+            STATION(16.0, 50.0);
 
             private final double anchor; 
             private final double floating; 
@@ -84,7 +86,7 @@ public final class Constants {
 
         public enum ScoringPosition {
             HIGH_CUBE(Position.HIGH_CUBE, ScoreSpeed.FAST), 
-            MID_CUBE(Position.CONTRACTED, ScoreSpeed.SLOW), 
+            MID_CUBE(Position.MID_CUBE, ScoreSpeed.SLOW), 
             LOW_CUBE(Position.GROUND, ScoreSpeed.SLOW), 
 
             HIGH_CONE(Position.HIGH_CONE, ScoreSpeed.SLOW), 
@@ -119,8 +121,8 @@ public final class Constants {
         public static final int kPort = 24;
         public static final double kLowPower = 0.2;
         public static final double kHighPower = 0.9;
-        public static final double kAutoIntakeSeconds = 1; 
-        public static final double kAutoOuttakeSeconds = 1; 
+        public static final double kAutoIntakeSeconds = 0.5; 
+        public static final double kAutoOuttakeSeconds = 0.5; 
 
         public enum ScoreSpeed {
             FAST, 
@@ -198,9 +200,8 @@ public final class Constants {
         public static final int kMaxFreeAmps = 35;
         public static final int kMaxStallAmps = 45;  
         public static final double kThrottleMultiplier = 0.70;
-        public static final double kQuickTurnMultiplier = 0.23;
-        public static final double kSlowThrottleTurnMultiplier = 0.55; 
-        public static final double kFastThrottleTurnMultiplier = 0.23; 
+        public static final double kQuickTurnMultiplier = 0.26; //0.23 static final double kSlowThrottleTurnMultiplier = 0.3; 
+        public static final double kFastThrottleTurnMultiplier = 0.22; //0.2
         public static final double kThrottleMultiplierSM = 0.18;
         public static final double kTurnMultiplierSM = 0.15;
 
@@ -210,18 +211,20 @@ public final class Constants {
         public static final double kBackwardThrottleDecelFilter = 0.8;
         public static final double kTurnFilter = 3;
 
-        // TODO: tune these
-        public static final double kTurnP = 0.048; 
+        // TODO: TUNE THESE ON MONDAY FIRST THING
+        public static final double kTurnP = 0.00385; 
         public static final double kTurnI = 0; 
-        public static final double kTurnD = 0; 
+        public static final double kTurnD = 0.0001; 
+        public static final double kTurnFF = 0.09; 
         public static final double kTurnErrorThreshold = 2; 
+        public static final double kTurnVelocityThreshold = 2; 
     }
 
     public static class Balance {
-        public static final double kP = 0.009;
+        public static final double kP = 0.0095;
         public static final double kI = 0;
         public static final double kD = 0.0003;
-        public static final double kPositionTolerance = 2.0; // TODO: tune this, also keep in mind gyro alignment is trash
-        public static final double kVelocityTolerance = 1.0; // TODO: tune this, 1 degree per second seems pretty reasonable for stopped state
+        public static final double kPositionTolerance = 4.0; // TODO: tune this, also keep in mind gyro alignment is trash
+        // public static final double kVelocityTolerance = 1.0; // TODO: tune this, 1 degree per second seems pretty reasonable for stopped state
     }
 }

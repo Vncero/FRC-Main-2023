@@ -104,7 +104,7 @@ public class Arm extends SubsystemBase {
       this.floatingPIDController.setD(Constants.Arm.Floating.kD);
       this.floatingPIDController.setFF(Constants.Arm.Floating.kFF);
 
-      this.floatingPIDController.setOutputRange(-0.3, 0.4);
+      this.floatingPIDController.setOutputRange(Constants.Arm.Floating.kMaxDownwardOutput, Constants.Arm.Floating.kMaxUpwardOutput);
 
       // this.anchorPIDController.setFeedbackDevice(anchorEncoder);
       this.floatingPIDController.setFeedbackDevice(floatingEncoder); 
@@ -175,9 +175,12 @@ public class Arm extends SubsystemBase {
       // TODO: comment out tuneControllers() at comp
       // tuneControllers();
 
-      // if(this.anchorLimitSwitch.get()) {
+      // ! this will fucking break everything if our limit switch unplugs
+      // if(!this.anchorLimitSwitch.get()) {
       //    this.anchorEncoder.setPosition(Constants.Arm.Anchor.kContracted);
       // }
+
+      SmartDashboard.putBoolean("limit switch contacted", !this.anchorLimitSwitch.get()); 
 
       SmartDashboard.putBoolean("on cube", this.armMode);
 
