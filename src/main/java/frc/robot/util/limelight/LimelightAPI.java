@@ -1,6 +1,6 @@
 package frc.robot.util.limelight;
 
-import java.net.URISyntaxException;
+//import java.net.URISyntaxException;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
@@ -19,15 +19,19 @@ import frc.robot.util.enums.LedMode;
 import frc.robot.util.enums.Snapshot;
 import frc.robot.util.enums.StreamMode;
 
+/* vision TODO:
+*   - mess with web interface & make pipeline(s) for detecting game pieces (cube, cone)
+*   - research/attempt switching from mjpeg to h.264 for camera streaming
+*/
 public class LimelightAPI {
 
-    private static NetworkTable limelightNT = NetworkTableInstance.getDefault().getTable("limelight");
+    private static final NetworkTable limelightNT = NetworkTableInstance.getDefault().getTable("limelight");
 
     // public Websocket wsClient;
 
     public static boolean logging;
 
-    public LimelightAPI(boolean logging) throws URISyntaxException {
+//    public LimelightAPI(boolean logging) throws URISyntaxException {
         // this.wsClient = new Websocket(new URI(Constants.Limelight.kLimelightURLString));
         // this.logging = logging;
         // LimelightAPI.limelightNT =
@@ -38,7 +42,7 @@ public class LimelightAPI {
         // }
 
         // SmartDashboard.putString("Limelight table", "not null");
-    }
+//    }
 
     // public Pose2d getActualPose2d() {
     //     var rawJson = this.wsClient.getMessage();
@@ -101,20 +105,16 @@ public class LimelightAPI {
         SmartDashboard.putNumber("botpose rZ", botPose.getRotation().getZ());
     }
 
-    /** Returns an adjusted Pose3D based on camera pose */
+    /* Returns an adjusted Pose2D based on camera pose */
     public static Pose2d adjustCamPose(Displacement displacement) {
-        Pose2d camPose = LimelightAPI.camPose();
-
-        if (camPose == null) {
-            return new Pose2d();
-        }
+        Pose2d camPose = getCamPoseTargetSpace();
 
         double dZ = camPose.getY() + 0.69 * 0.420; //nice.
         double dX = camPose.getX() + displacement.getOffset();
 
         double actualRot = Math.signum(dX) * camPose.getRotation().getRadians();
 
-        var camPose2 = LimelightAPI.targetPoseBotSpace(); 
+        Pose2d camPose2 = getTargetPoseRobotSpace();
 
         SmartDashboard.putNumber("frfr rot", Math.signum(-camPose2.getX()) * Math.abs(camPose2.getRotation().getDegrees()));
         SmartDashboard.putNumber("frfr sideways", -camPose2.getX());
@@ -132,9 +132,10 @@ public class LimelightAPI {
         return new Pose2d(adjustedX, adjustedZ, new Rotation2d(actualRot));
     }
 
+    // TODO: questionable code, perhaps test??
     public static Pose2d getOffsetTargetPose(double epsilon, double delta) { // x, y offsets (with respect to target, Cartesian)
-        Pose2d targetPose = targetPoseBotSpace();
-        Pose2d camPose = camPose(); // target space
+        Pose2d targetPose = getTargetPoseRobotSpace();
+        Pose2d camPose = getCamPoseTargetSpace(); // target space
 
         double theta = camPose.getRotation().getRadians();
         double alpha = targetPose.getRotation().getRadians();
@@ -143,6 +144,7 @@ public class LimelightAPI {
 
         // to reinterpret epsilon & delta in robot space, rotate by phi, the angle between the axes of target & robot space
         // as a side effect, the coordinates are switched i.e. horizontal motion in robot space is y as opposed to x (and vice versa, more or less)
+        // could perhaps use Pose2d#relativeTo()
         double rotatedEpsilon = epsilon * Math.cos(phi) - delta * Math.sin(phi);
         double rotatedDelta = epsilon * Math.sin(phi) + delta * Math.cos(phi);
 
@@ -202,8 +204,7 @@ public class LimelightAPI {
     }
 
     public static Object rawJSONTargets() {
-        var raw = LimelightAPI.limelightNT.getEntry("json").getValue().getValue();
-        return raw;
+        return LimelightAPI.limelightNT.getEntry("json").getValue().getValue();
     }
 
     public static void setPipeline(int pipeline) {
@@ -261,19 +262,46 @@ public class LimelightAPI {
         return new Pose3d(poseRaw[0], poseRaw[1], poseRaw[2], rotationPose);
     }
 
+    public static Pose2d getPose(String pose, String space) {
+        return flattenPose(getPose(pose + "_" + space));
+    }
+
     public static Pose2d flattenPose(Pose3d raw) {
-        return new Pose2d(raw.getX(), raw.getZ(), new Rotation2d(raw.getRotation().getY())); // TODO: see if this works
+        return new Pose2d(raw.getX(), raw.getZ(), new Rotation2d(raw.getRotation().getY()));
     }
 
-    public static Pose2d targetPoseBotSpace() {
-        return flattenPose(LimelightAPI.getPose("targetpose_robotspace")); 
+    // target pose
+    public static Pose2d getTargetPoseRobotSpace() {
+        return getPose("targetpose", "robotspace");
     }
 
-    public static Pose2d botPose() {
-        return flattenPose(LimelightAPI.getPose("botpose_targetspace"));
+    public static Pose2d getTargetPoseCameraSpace() {
+        return getPose("targetpose", "cameraspace");
     }
 
-    public static Pose2d camPose() {
-        return flattenPose(LimelightAPI.getPose("camerapose_targetspace"));
+    // TODO: upload .fmap to web interface for field space
+    // bot pose
+    public static Pose2d getBotPoseFieldSpace() {
+        return flattenPose(getPose("botpose"));
+    }
+
+    public static Pose2d getBotPoseWPIRedSpace() {
+        return getPose("botpose", "wpired");
+    }
+
+    public static Pose2d getBotPoseWPIBlueSpace() {
+        return getPose("botpose", "wpiblue");
+    }
+
+    public static Pose2d getBotPoseTargetSpace() {
+        return getPose("botpose", "targetspace");
+    }
+
+    public static Pose2d getCamPoseRobotSpace() {
+        return getPose("camerapose", "robotspace");
+    }
+
+    public static Pose2d getCamPoseTargetSpace() {
+        return getPose("camerapose", "targetspace");
     }
 }
