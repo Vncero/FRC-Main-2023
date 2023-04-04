@@ -147,6 +147,10 @@ public class Drivetrain extends SubsystemBase {
         odometry.resetPosition(gyro.getRotation2d(), leftEncoder.getPosition(), rightEncoder.getPosition(), pose);
     }
 
+    public void resetYaw() {
+        gyro.zeroYaw();
+    }
+
     public void setDrivePower(double power) {
         leftMotors.set(power);
         rightMotors.set(power);
@@ -200,6 +204,7 @@ public class Drivetrain extends SubsystemBase {
 
     // Resets the record values of both sides of encoders.
     public void resetEncoders() {
+        System.out.println("resetting encoders");
         leftEncoder.setPosition(0);
         rightEncoder.setPosition(0);
     }

@@ -28,6 +28,7 @@ public class Gyro extends SubsystemBase {
         this.pitchVelocity = 0;
         
         _gyro.calibrate();
+        _gyro.reset();
     }
 
     public double getPitch() {
