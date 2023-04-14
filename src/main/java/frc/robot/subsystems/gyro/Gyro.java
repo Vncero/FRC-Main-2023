@@ -9,7 +9,7 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 public class Gyro extends SubsystemBase {
-    private AHRS _gyro = new AHRS(SPI.Port.kMXP);
+    public AHRS _gyro = new AHRS(SPI.Port.kMXP);
         
     private double pitchOffset;
     private boolean initialized;
@@ -27,8 +27,12 @@ public class Gyro extends SubsystemBase {
         this.lastPitch = this._gyro.getPitch();
         this.pitchVelocity = 0;
         
+        _gyro.enableLogging(true); 
         _gyro.calibrate();
-        _gyro.reset();
+
+        // _gyro.close();
+        // _gyro.io
+        System.out.println("gyro init"); 
     }
 
     public double getPitch() {
