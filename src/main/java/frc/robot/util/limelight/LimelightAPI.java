@@ -21,8 +21,9 @@ import frc.robot.util.enums.StreamMode;
 
 /* vision TODO:
 *   - mess with web interface & make pipeline(s) for detecting game pieces (cube, cone)
-*   - research/attempt switching from mjpeg to h.264 for camera streaming
+*   - research/attempt switching from mjpeg to h.264 for camera streaming (potential-engine)
 */
+
 public class LimelightAPI {
 
     private static final NetworkTable limelightNT = NetworkTableInstance.getDefault().getTable("limelight");
@@ -155,43 +156,43 @@ public class LimelightAPI {
         return new Pose2d(adjustedX, -adjustedY, targetPose.getRotation());
     }
 
-    public static boolean validTargets() {
+    public static boolean hasValidTargets() {
         return LimelightAPI.limelightNT.getEntry("tv").getDouble(0) == 1;
     }
 
-    public static double horizontalOffset() {
+    public static double getHorizontalOffset() {
         return LimelightAPI.limelightNT.getEntry("tx").getDouble(0);
     }
 
-    public static double verticalOffset() {
+    public static double getVerticalOffset() {
         return LimelightAPI.limelightNT.getEntry("ty").getDouble(0);
     }
 
-    public static double skew() {
+    public static double getSkew() {
         return LimelightAPI.limelightNT.getEntry("ts").getDouble(0);
     }
 
-    public static double targetArea() {
+    public static double getTargetArea() {
         return LimelightAPI.limelightNT.getEntry("ta").getDouble(0);
     }
 
-    public static double latency() {
+    public static double getLatency() {
         return LimelightAPI.limelightNT.getEntry("tl").getDouble(0);
     }
 
-    public static double shortSideLength() {
+    public static double getShortSideLength() {
         return LimelightAPI.limelightNT.getEntry("tshort").getDouble(0);
     }
 
-    public static double longSideLength() {
+    public static double getLongSideLength() {
         return LimelightAPI.limelightNT.getEntry("tlong").getDouble(0);
     }
 
-    public static double verticalSideLength() {
+    public static double getVerticalSideLength() {
         return LimelightAPI.limelightNT.getEntry("tvert").getDouble(0);
     }
 
-    public static double horizontalSideLength() {
+    public static double getHorizontalSideLength() {
         return LimelightAPI.limelightNT.getEntry("thor").getDouble(0);
     }
 
@@ -268,6 +269,7 @@ public class LimelightAPI {
 
     public static Pose2d flattenPose(Pose3d raw) {
         return new Pose2d(raw.getX(), raw.getZ(), new Rotation2d(raw.getRotation().getY()));
+//        return raw.toPose2d();
     }
 
     // target pose

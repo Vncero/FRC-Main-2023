@@ -10,15 +10,12 @@ import frc.robot.util.enums.Displacement;
 import frc.robot.util.limelight.LimelightAPI;
 import org.bananasamirite.robotmotionprofile.Waypoint;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class PoseTracker extends SubsystemBase {
     // Getting last 3 camera pose values
-    private SizedQueue<Pose2d> camPoseQueue = new SizedQueue<>(3);
+    private final SizedQueue<Pose2d> camPoseQueue = new SizedQueue<>(3);
 
     // Getting last 3 bot pose values
-    private SizedQueue<Pose2d> botPoseQueue = new SizedQueue<>(3);
+    private final SizedQueue<Pose2d> botPoseQueue = new SizedQueue<>(3);
 
     private Pose2d avgPythonCamPose;
 
@@ -42,7 +39,7 @@ public class PoseTracker extends SubsystemBase {
 
     // TODO: are we scrapping this? definitely something to discuss
     public Pose2d getSensorFusionAverage() {
-        return PoseUtil.averagePipelinePoses(new ArrayList<>(List.of(avgAprilTagCamPose, avgPythonCamPose)));
+        return PoseUtil.averagePoses(avgAprilTagCamPose, avgPythonCamPose);
     }
 
     public Pose2d getAverageAprilPose() {

@@ -1,64 +1,46 @@
 package frc.robot.util;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.util.sendable.Sendable;
-
 import frc.robot.Constants;
 
+import java.util.Collection;
+import java.util.List;
+
 public class PoseUtil {
-    public static Pose2d averagePoses(SizedQueue<Pose2d> posesRaw) {
-        SizedQueue<Pose2d> poses = posesRaw; // sanitizePoses(posesRaw);
+
+    public static Pose2d averagePoses(Pose2d... poses) {
+        return averagePoses(List.of(poses));
+    }
+
+    public static <T extends Collection<Pose2d>> Pose2d averagePoses(T poses) {
 
         Translation2d avgTranslation = poses.stream()
             .map(Pose2d::getTranslation)
             .reduce(new Translation2d(), Translation2d::plus)
             .div(poses.size());
 
-        Rotation2d avgRotation = poses.stream()
-            .map(Pose2d::getRotation)
-            .reduce(new Rotation2d(), Rotation2d::plus)
-            .div(poses.size());
+        Rotation2d avgRotation = new Rotation2d(
+                poses
+                    .stream()
+                    .map(p -> p.getRotation().getRadians())
+                    .reduce(0.0, Double::sum)
+        );
 
         return new Pose2d(avgTranslation, avgRotation);
     }
 
-    public static Pose2d averagePipelinePoses(ArrayList<Pose2d> poses) {
-        // TODO: debug sanitization
-        // List<Pose2d> poses = sanitizePosesList(posesRaw);
-
-        Translation2d avgTranslation = poses.stream()
-            .map(Pose2d::getTranslation)
-            .reduce(new Translation2d(), Translation2d::plus)
-            .div(poses.size());
-
-        Rotation2d avgRotation = poses.stream()
-            .map(Pose2d::getRotation)
-            .reduce(new Rotation2d(), Rotation2d::plus)
-            .div(poses.size());
-
-        return new Pose2d(avgTranslation, avgRotation);
-    }
-
-    public static SizedQueue<Pose2d> sanitizePoses(SizedQueue<Pose2d> poses) {
-        List<Pose2d> filteredPoses = poses.stream()
-            .filter(p -> (
+    public static <T extends Collection<Pose2d>> T sanitizePoses(T poses) {
+        poses.removeIf(p -> !(
                 p.getX() > Constants.GridAlign.kCamSanityXMin &&
                 p.getX() < Constants.GridAlign.kCamSanityXMax &&
                 p.getY() > Constants.GridAlign.kCamSanityZMin &&
                 p.getY() < Constants.GridAlign.kCamSanityZMax
-            )).collect(Collectors.toList());
+        ));
 
-        SizedQueue<Pose2d> queue = new SizedQueue<>(3);
-
-        queue.addAll(filteredPoses);
-
-        return queue;
+        return poses;
     }
 
     public static Sendable getDefaultPoseSendable(Pose2d pose) {

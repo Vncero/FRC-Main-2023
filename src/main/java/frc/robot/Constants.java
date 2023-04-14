@@ -223,6 +223,13 @@ public final class Constants {
         public static final double kSteer = 0.0;
     }
 
+    // TODO: tune
+    public static class PoleAlign {
+        public static final double kP = 0;
+        public static final double kI = 0;
+        public static final double kD = 0;
+    }
+
     public static class Drivetrain {
         public static class LeftMotors {
             public static final int kLeftMotor1_Port = 10;
