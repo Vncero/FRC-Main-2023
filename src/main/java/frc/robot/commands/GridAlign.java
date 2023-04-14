@@ -5,7 +5,7 @@ import frc.robot.Constants;
 import frc.robot.commands.trajectory.TrajectoryCommand;
 
 import frc.robot.subsystems.drivetrain.Drivetrain;
-import frc.robot.subsystems.poseTracker.PoseTracker;
+import frc.robot.subsystems.vision.poseTracker.PoseTracker;
 
 public class GridAlign extends TrajectoryCommand {
 

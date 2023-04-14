@@ -1,4 +1,4 @@
-package frc.robot.util.limelight;
+package frc.robot.subsystems.vision.limelight;
 
 import java.net.URISyntaxException;
 

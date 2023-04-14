@@ -1,4 +1,4 @@
-package frc.robot.subsystems.poseTracker;
+package frc.robot.subsystems.vision.poseTracker;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,11 +10,11 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 
 import frc.robot.Constants;
+import frc.robot.subsystems.vision.limelight.LimelightAPI;
 import frc.robot.util.PipelineIndex;
 import frc.robot.util.PoseUtil;
 import frc.robot.util.SizedQueue;
 import frc.robot.util.enums.Displacement;
-import frc.robot.util.limelight.LimelightAPI;
 
 public class PoseTracker extends SubsystemBase {
     // Getting last 3 camera pose values
