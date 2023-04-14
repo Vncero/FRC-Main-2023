@@ -18,7 +18,7 @@ public class Balance extends PIDCommand {
             // Set reference to target
             () -> setpoint,
             // Pipe output to turn robot
-            (outputPower) -> drivetrain.curvatureDrive(outputPower, 0, frc.robot.util.DriverController.Mode.NORMAL), // TODO: was this negative?
+            (outputPower) -> drivetrain.arcadeDrive(outputPower, 0), // TODO: was this negative?
             drivetrain
         );
 
@@ -32,14 +32,18 @@ public class Balance extends PIDCommand {
     }
 
     @Override
-    public void execute(){
+    public void execute() {
+        
         SmartDashboard.putNumber("pitch-error", Math.abs(this.m_measurement.getAsDouble()));
         SmartDashboard.putNumber("pitch-velocity", Math.abs(this.gyro.getPitchVelocity()));
 
-        this.m_controller.setP(SmartDashboard.getNumber("balance-kP", 0));
-        this.m_controller.setD(SmartDashboard.getNumber("balance-kD", 0));
+        // TODO: comment out for comp
+        // this.m_controller.setP(SmartDashboard.getNumber("balance-kP", 0));
+        // this.m_controller.setD(SmartDashboard.getNumber("balance-kD", 0));
 
         double output = this.m_controller.calculate(this.m_measurement.getAsDouble(), this.m_setpoint.getAsDouble());
+
+        SmartDashboard.putNumber("balance-output", output);
 
         this.m_useOutput.accept(-output);
 

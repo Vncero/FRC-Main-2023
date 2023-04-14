@@ -1,12 +1,10 @@
 package frc.robot.subsystems.drivetrain;
 
-import com.kauailabs.navx.frc.AHRS;
 import com.revrobotics.CANSparkMax;
 import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMax.IdleMode;
 
-import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
@@ -17,12 +15,10 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
-import frc.robot.subsystems.vision.limelight.LimelightAPI;
-import frc.robot.util.DriveFollower;
+import frc.robot.subsystems.gyro.Gyro;
 import frc.robot.util.Encoder;
-import frc.robot.util.DriverController.Mode;
 import frc.robot.util.enums.Displacement;
-import edu.wpi.first.wpilibj.SPI;
+import frc.robot.subsystems.vision.limelight.LimelightAPI;
 
 public class Drivetrain extends SubsystemBase {
     private final CANSparkMax leftMotor1 = new CANSparkMax(Constants.Drivetrain.LeftMotors.kLeftMotor1_Port, CANSparkMaxLowLevel.MotorType.kBrushless);
@@ -53,19 +49,15 @@ public class Drivetrain extends SubsystemBase {
     private final Encoder rightEncoder = new Encoder(rightMotor1.getEncoder());
     private final Encoder leftEncoder = new Encoder(leftMotor1.getEncoder());
 
-    private final AHRS gyro = new AHRS(SPI.Port.kMXP);
-
     private final Field2d m_field = new Field2d();
-
-    private final SlewRateLimiter throttleForwardFilter = new SlewRateLimiter(Constants.Drivetrain.kForwardThrottleAccelFilter, -Constants.Drivetrain.kForwardThrottleDecelFilter, 0);
-    private final SlewRateLimiter throttleBackwardFilter = new SlewRateLimiter(Constants.Drivetrain.kBackwardThrottleAccelFilter, -Constants.Drivetrain.kBackwardThrottleDecelFilter,0);
-    private final SlewRateLimiter turnFilter = new SlewRateLimiter(Constants.Drivetrain.kTurnFilter);
-
-    private final DriveFollower driveFollower; 
 
     public boolean isAutoSteer = false; 
 
-    public Drivetrain() {
+    public final Gyro gyro; 
+
+    public Drivetrain(Gyro gyro) {
+        this.gyro = gyro;
+
         // inversions
         rightMotor1.setInverted(true);
         rightMotor2.setInverted(true);
@@ -84,21 +76,25 @@ public class Drivetrain extends SubsystemBase {
         rightMotor2.setIdleMode(IdleMode.kCoast);
         rightMotor3.setIdleMode(IdleMode.kBrake);
 
-
         // current & voltage limits
-        leftMotor1.setSmartCurrentLimit(Constants.Drivetrain.kMaxAmps);
-        leftMotor2.setSmartCurrentLimit(Constants.Drivetrain.kMaxAmps);
-        leftMotor3.setSmartCurrentLimit(Constants.Drivetrain.kMaxAmps);
-        rightMotor1.setSmartCurrentLimit(Constants.Drivetrain.kMaxAmps);
-        rightMotor2.setSmartCurrentLimit(Constants.Drivetrain.kMaxAmps);
-        rightMotor3.setSmartCurrentLimit(Constants.Drivetrain.kMaxAmps);
+        // configureMotors((m) -> {
+        //     // m.setSmartCurrentLimit(Constants.Drivetrain.kMaxStallAmps); 
+        //     m.enableVoltageCompensation(12); 
+        // });
 
-        leftMotor1.enableVoltageCompensation(12);
-        leftMotor2.enableVoltageCompensation(12);
-        leftMotor3.enableVoltageCompensation(12);
-        rightMotor1.enableVoltageCompensation(12);
-        rightMotor2.enableVoltageCompensation(12);
-        rightMotor3.enableVoltageCompensation(12);
+        leftMotor1.setSmartCurrentLimit(Constants.Drivetrain.kMaxStallAmps); 
+        leftMotor2.setSmartCurrentLimit(Constants.Drivetrain.kMaxStallAmps); 
+        leftMotor3.setSmartCurrentLimit(Constants.Drivetrain.kMaxStallAmps); 
+        rightMotor1.setSmartCurrentLimit(Constants.Drivetrain.kMaxStallAmps); 
+        rightMotor2.setSmartCurrentLimit(Constants.Drivetrain.kMaxStallAmps); 
+        rightMotor3.setSmartCurrentLimit(Constants.Drivetrain.kMaxStallAmps); 
+
+        leftMotor1.enableVoltageCompensation(12); 
+        leftMotor2.enableVoltageCompensation(12); 
+        leftMotor3.enableVoltageCompensation(12); 
+        rightMotor1.enableVoltageCompensation(12); 
+        rightMotor2.enableVoltageCompensation(12);  
+        rightMotor3.enableVoltageCompensation(12); 
 
         rightEncoder.getEncoder().setPositionConversionFactor(Constants.Trajectory.kMetersPerRot);
         leftEncoder.getEncoder().setPositionConversionFactor(Constants.Trajectory.kMetersPerRot);
@@ -106,13 +102,11 @@ public class Drivetrain extends SubsystemBase {
         leftEncoder.getEncoder().setVelocityConversionFactor(Constants.Trajectory.kMetersPerSecondPerRPM);
         rightEncoder.getEncoder().setVelocityConversionFactor(Constants.Trajectory.kMetersPerSecondPerRPM);
 
+        gyro.zeroYaw();
+
         resetEncoders();
 
         odometry = new DifferentialDriveOdometry(gyro.getRotation2d(), leftEncoder.getPosition(), rightEncoder.getPosition());
-
-        this.driveFollower = new DriveFollower(this); 
-
-        //initDefaultCommand(driverController);
     }
 
     // Constantly updates the odometry of the robot with the rotation and the distance traveled.
@@ -123,9 +117,12 @@ public class Drivetrain extends SubsystemBase {
         SmartDashboard.putData("field", m_field);
         SmartDashboard.putNumber("x", odometry.getPoseMeters().getX());
         SmartDashboard.putNumber("y", odometry.getPoseMeters().getY());
-        SmartDashboard.putNumber("rotation", odometry.getPoseMeters().getRotation().getDegrees());
+        SmartDashboard.putNumber("rotation", getPose().getRotation().getDegrees());
+        SmartDashboard.putNumber("yaw", getYaw()); 
         SmartDashboard.putNumber("encoderLeft", leftEncoder.getPosition());
         SmartDashboard.putNumber("encoderRight", rightEncoder.getPosition());
+        SmartDashboard.putNumber("leftSpeed", leftEncoder.getEncoder().getVelocity());
+        SmartDashboard.putNumber("rightSpeed", rightEncoder.getEncoder().getVelocity()); 
     }
 
     // Returns the pose of the robot.
@@ -144,9 +141,13 @@ public class Drivetrain extends SubsystemBase {
 
     // Resets the odometry, both rotation and distance traveled.
     public void resetOdometry(Pose2d pose) {
-        gyro.zeroYaw();
+        // gyro.zeroYaw();
         resetEncoders();
         odometry.resetPosition(gyro.getRotation2d(), leftEncoder.getPosition(), rightEncoder.getPosition(), pose);
+    }
+
+    public void resetYaw() {
+        gyro.zeroYaw();
     }
 
     public void setDrivePower(double power) {
@@ -154,57 +155,22 @@ public class Drivetrain extends SubsystemBase {
         rightMotors.set(power);
     }
 
-    // private double lastNonzeroThrottle = 0;
-    private double lastEffThrottle = 0; 
-
-    public void rawCurvatureDrive(double throttle, double turn, boolean turnInPlace) {
-        difDrive.curvatureDrive(throttle, turn, turnInPlace);
+    public void rawArcadeDrive(double throttle, double turn, boolean squareInputs) {
+        difDrive.arcadeDrive(throttle, turn, squareInputs);
     }
 
     // Drives the robot with arcade controls.
-    public void curvatureDrive(double throttle, double turn, Mode mode) {
+    public void arcadeDrive(double throttle, double turn) {
+        SmartDashboard.putBoolean("is quickturning", Math.abs(throttle) < 0.05);
+        SmartDashboard.putNumber("turn", turn); 
 
-        // TODO: use this if you want deceleration to be higher when joystick is in the opp direction as the current drive direction
-        // double effThrottle = 0; 
-        // if (throttle > 0 || lastNonzeroThrottle > 0) {
-        //     effThrottle = throttleForwardFilter.calculate(throttle); 
-        //     throttleBackwardFilter.reset(0);
-        // } else if (throttle < 0 || lastNonzeroThrottle < 0) {
-        //     effThrottle = -throttleBackwardFilter.calculate(-throttle); 
-        //     throttleForwardFilter.reset(0);
-        // }
-        
-        double effThrottle = 0; 
-        if (mode == Mode.SLOW) {
-            effThrottle = throttle;
-            throttleBackwardFilter.reset(0); 
-            throttleForwardFilter.reset(0); 
-        } else {
-            if (lastEffThrottle > 0) {
-                effThrottle = throttleForwardFilter.calculate(Math.max(throttle, 0)); 
-                throttleBackwardFilter.reset(0);
-            } else if (lastEffThrottle < 0) {
-                effThrottle = -throttleBackwardFilter.calculate(-Math.min(throttle, 0)); 
-                throttleForwardFilter.reset(0);
-            } else {
-                effThrottle = throttle > 0 ? throttleForwardFilter.calculate(throttle) : throttle < 0 ? -throttleBackwardFilter.calculate(-throttle) : 0; 
-            }
-        }
-        
-        // if (lastNonzeroThrottle != 0)
-        lastEffThrottle = effThrottle; 
-
-        SmartDashboard.putBoolean("is quickturning", Math.abs(effThrottle) < 0.05); 
-
-        difDrive.curvatureDrive(effThrottle, 
-        turnFilter.calculate(turn), 
-        Math.abs(effThrottle) < 0.05);
+        difDrive.arcadeDrive(throttle, turn, false);
     }
 
-    public void autoSteerCurvatureDrive(double throttle, Mode mode, Pose2d aprilTagPose) { // aprilTagPose = pose relative to robot
+    public void autoSteerArcadeDrive(double throttle, Pose2d aprilTagPose) { // aprilTagPose = pose relative to robot
         double turnPower = aprilTagPose.getY() * Constants.GridAlign.kSteer * (throttle != 0 ? throttle : 0.25);
 
-        curvatureDrive(throttle, turnPower, mode);
+        arcadeDrive(throttle, turnPower);
 
         // double curvature = ParametricSpline.fromWaypoints(new Waypoint[] {
         //     new Waypoint(0, 0, 0, 1, 1), 
@@ -218,13 +184,13 @@ public class Drivetrain extends SubsystemBase {
         // tankDriveVolts(voltages.getLeft(), voltages.getRight());
     }
 
-    public void drive(double throttle, double turn, Mode mode) {
+    public void drive(double throttle, double turn) {
         Pose2d pose = LimelightAPI.adjustCamPose(Displacement.kCenter); 
 
         if (isAutoSteer && pose != null) {
-            autoSteerCurvatureDrive(throttle, mode, pose);
+            autoSteerArcadeDrive(throttle, pose);
         } else {
-            curvatureDrive(throttle, turn, mode);
+            arcadeDrive(throttle, turn);
         }
     }
 
@@ -237,6 +203,7 @@ public class Drivetrain extends SubsystemBase {
 
     // Resets the record values of both sides of encoders.
     public void resetEncoders() {
+        System.out.println("resetting encoders");
         leftEncoder.setPosition(0);
         rightEncoder.setPosition(0);
     }
@@ -271,13 +238,17 @@ public class Drivetrain extends SubsystemBase {
     }
 
     // Sets the recorded heading to 0. Makes new direction the 0 heading.
-    public void zeroHeading() {
-        gyro.reset();
-    }
+    // public void zeroHeading() {
+    //     gyro.reset();
+    // }
 
     // Returns the direction the robot is facing in degrees from -180 to 180 degrees.
     public double getHeading() {
         return gyro.getRotation2d().getDegrees();
+    }
+
+    public double getYaw() {
+        return -gyro.getYaw(); 
     }
 
     // Returns the rate at which the robot is turning in degrees per second.
@@ -287,9 +258,5 @@ public class Drivetrain extends SubsystemBase {
 
     public Field2d getField() {
         return this.m_field; 
-    }
-    
-    public DriveFollower getDriveFollower() {
-        return driveFollower; 
     }
 }

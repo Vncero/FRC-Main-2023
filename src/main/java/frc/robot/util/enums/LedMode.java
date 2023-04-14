@@ -18,9 +18,9 @@ public enum LedMode {
      */
     ON(3);
     
-    private int value;
+    private final int value;
     
-    private LedMode(int value) {
+    LedMode(int value) {
         this.value = value;
     }
     
