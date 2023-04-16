@@ -14,7 +14,6 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.util.sendable.Sendable;
 import edu.wpi.first.util.sendable.SendableBuilder;
-import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import frc.robot.Constants;
 
 public class PhotonLimelight implements Sendable {
@@ -74,6 +73,10 @@ public class PhotonLimelight implements Sendable {
         EstimatedRobotPose unpacked = optPose.get(); 
 
         return pose.relativeTo(unpacked.estimatedPose.toPose2d()); 
+    }
+
+    public PhotonPipelineResult getResult() {
+        return this.result;
     }
 
     // TODO: finish or scrap for choosers

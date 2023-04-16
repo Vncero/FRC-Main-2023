@@ -9,16 +9,21 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
 import edu.wpi.first.math.kinematics.DifferentialDriveWheelSpeeds;
+import edu.wpi.first.math.trajectory.TrajectoryConfig;
 import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
+import frc.robot.commands.trajectory.TrajectoryCommand;
 import frc.robot.subsystems.gyro.Gyro;
+import frc.robot.util.DriverController;
 import frc.robot.util.Encoder;
 import frc.robot.util.enums.Displacement;
 import frc.robot.subsystems.vision.limelight.LimelightAPI;
+import org.bananasamirite.robotmotionprofile.Waypoint;
 
 public class Drivetrain extends SubsystemBase {
     private final CANSparkMax leftMotor1 = new CANSparkMax(Constants.Drivetrain.LeftMotors.kLeftMotor1_Port, CANSparkMaxLowLevel.MotorType.kBrushless);
@@ -258,5 +263,9 @@ public class Drivetrain extends SubsystemBase {
 
     public Field2d getField() {
         return this.m_field; 
+    }
+
+    public Command teleopDrive(DriverController driverController) {
+        return run(() -> arcadeDrive(driverController.getThrottle(), driverController.getTurn()));
     }
 }
