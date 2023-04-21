@@ -5,18 +5,12 @@ image:
 
 tasks:
   - name: wpilibinstaller
-    init: | 
-      set -e
-      cd ~/wpilibinstaller
-      tar -xf WPILib_Linux-2023.4.3.tar.gz
-      rm WPILib_Linux-2023.4.3.tar.gz
-      cd WPILib_Linux-2023.4.3
+    before: |
+      cd ~/wpilibinstaller/WPILib_Linux-2023.4.3
       ./WPILibInstaller
+    command: |
       cd ../..
       rm -r wpilibinstaller
-      rm -r ~/wpilib/2021
-      apt autoremove
-# removing the wpilibinstaller folder while the installer is running is generally not great practice, but don't think about it too hard
 
 # Currently, FRC Driver Station & other NI FRC Game Tools are not provided. There are two solutions:
 #  - Use a DS alternative

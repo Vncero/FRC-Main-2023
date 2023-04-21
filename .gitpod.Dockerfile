@@ -1,6 +1,14 @@
 FROM gitpod/workspace-full-vnc
 
-# may or may not move this to init task in .gitpod.yml depending on workspace lifecycle (TODO: test further)
-RUN set -e \
-    && mkdir wpilibinstaller \
-    && wget -P wpilibinstaller/ https://github.com/wpilibsuite/allwpilib/releases/download/v2023.4.3/WPILib_Linux-2023.4.3.tar.gz \
+RUN sudo apt-get update && \
+    sudo apt-get install -y libgtk-3-dev && \
+    sudo rm -rf /var/lib/apt/lists/* && \
+    sudo apt autoremove
+
+RUN set -e && \
+    mkdir ~/wpilibinstaller \
+    wget -P ~/wpilibinstaller/ https://github.com/wpilibsuite/allwpilib/releases/download/v2023.4.3/WPILib_Linux-2023.4.3.tar.gz && \
+    cd ~/wpilibinstaller && \
+    tar -xf -C ~/wpilibinstaller WPILib_Linux-2023.4.3.tar.gz && \
+    rm WPILib_Linux-2023.4.3.tar.gz && \
+    rm -r ~/wpilib/2021 && \
