@@ -1,0 +1,32 @@
+# NOTE: This workspace setup tends to run into storage issues; if possible, use the workspace class "Large"
+
+image:
+  file: .gitpod.Dockerfile
+
+tasks:
+  - name: wpilibinstaller
+    init: | 
+      set -e
+      cd ~/wpilibinstaller
+      tar -xf WPILib_Linux-2023.4.3.tar.gz
+      rm WPILib_Linux-2023.4.3.tar.gz
+      cd WPILib_Linux-2023.4.3
+      ./WPILibInstaller
+      cd ../..
+      rm -r wpilibinstaller
+      rm -r ~/wpilib/2021
+      apt autoremove
+# removing the wpilibinstaller folder while the installer is running is generally not great practice, but don't think about it too hard
+
+# Currently, FRC Driver Station & other NI FRC Game Tools are not provided. There are two solutions:
+#  - Use a DS alternative
+#     - QDriverStation (https://github.com/FRC-Utilities/QDriverStation): 
+#        - closest in appearance to actual Driver Station
+#        - however, it is a known issue that it crashes shortly after starting (https://github.com/FRC-Utilities/QDriverStation/issues/70)
+#     - Conductor (https://github.com/Redrield/Conductor)
+#        - untested, as no prebuilt artifacts are unexpired
+#     - OpenDS (https://github.com/Boomaa23/open-ds)
+#        - appears extremely unlike actual Driver Station
+#  - Install NI FRC Game Tools
+#     - completely unimplemented (not even sure it's possible)
+#       use wine, bottles, or some other way to run the installer on Ubuntu
