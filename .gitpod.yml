@@ -1,5 +1,3 @@
-# NOTE: This workspace setup tends to run into storage issues; if possible, use the workspace class "Large"
-
 image:
   file: .gitpod.Dockerfile
 
@@ -14,7 +12,6 @@ tasks:
       rm -r ~/wpilib/2021
     init: |
       rm -r ~/wpilibinstaller
-      
 
 # Currently, FRC Driver Station & other NI FRC Game Tools are not provided. There are two solutions:
 #  - Use a DS alternative
@@ -28,3 +25,9 @@ tasks:
 #  - Install NI FRC Game Tools
 #     - completely unimplemented (not even sure it's possible)
 #       use wine, bottles, or some other way to run the installer on Ubuntu
+
+vscode:
+  extensions:
+    - vscjava.vscode-java-pack
+    - eamodio.gitlens
+    - wpilibsuite.vscode-wpilib
