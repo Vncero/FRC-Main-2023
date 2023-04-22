@@ -6,11 +6,12 @@ image:
 tasks:
   - name: wpilibinstaller
     before: |
+      rm -r ~/wpilib/2021
       cd ~/wpilibinstaller/WPILib_Linux-2023.4.3
       ./WPILibInstaller
     command: |
-      cd ../..
-      rm -r wpilibinstaller
+      rm -r ~/wpilibinstaller
+      
 
 # Currently, FRC Driver Station & other NI FRC Game Tools are not provided. There are two solutions:
 #  - Use a DS alternative
