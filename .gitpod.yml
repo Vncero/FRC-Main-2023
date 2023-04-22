@@ -6,8 +6,9 @@ image:
 tasks:
   - name: wpilibinstaller
     before: |
-      rm -r ~/wpilib/2021
+      rm -r ~/wpilibinstaller/WPILib_Linux-2023.4.3.tar.gz
       cd ~/wpilibinstaller/WPILib_Linux-2023.4.3
+      rm -r ~/wpilib/2021
       ./WPILibInstaller
     command: |
       rm -r ~/wpilibinstaller

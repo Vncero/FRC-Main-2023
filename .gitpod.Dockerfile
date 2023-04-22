@@ -1,8 +1,9 @@
-FROM gitpod/workspace-full-vnc
+FROM gitpod/workspace-full-vnc:latest
 
 RUN sudo apt-get update && \
     sudo apt-get install -y libgtk-3-dev && \
     sudo rm -rf /var/lib/apt/lists/* && \
+    sudo apt-get remove -y '.*vim.*' && \
     sudo apt autoremove
 
 USER gitpod
