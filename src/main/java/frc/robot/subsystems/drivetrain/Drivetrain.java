@@ -1,10 +1,11 @@
 package frc.robot.subsystems.drivetrain;
 
 import com.revrobotics.CANSparkMax;
+import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.RelativeEncoder;
-import com.revrobotics.CANSparkMax.IdleMode;
-
+import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.controller.PIDController;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
@@ -14,16 +15,19 @@ import edu.wpi.first.wpilibj.drive.DifferentialDrive;
 import edu.wpi.first.wpilibj.motorcontrol.MotorControllerGroup;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.commands.trajectory.TrajectoryCommand;
 import frc.robot.subsystems.gyro.Gyro;
+import frc.robot.subsystems.vision.limelight.LimelightAPI;
 import frc.robot.util.DriverController;
 import frc.robot.util.Encoder;
 import frc.robot.util.enums.Displacement;
-import frc.robot.subsystems.vision.limelight.LimelightAPI;
 import org.bananasamirite.robotmotionprofile.Waypoint;
+
+import java.util.List;
+import java.util.function.DoubleSupplier;
 
 public class Drivetrain extends SubsystemBase {
     private final CANSparkMax leftMotor1 = new CANSparkMax(Constants.Drivetrain.LeftMotors.kLeftMotor1_Port, CANSparkMaxLowLevel.MotorType.kBrushless);
@@ -265,7 +269,48 @@ public class Drivetrain extends SubsystemBase {
         return this.m_field; 
     }
 
-    public Command teleopDrive(DriverController driverController) {
-        return run(() -> arcadeDrive(driverController.getThrottle(), driverController.getTurn()));
+    public CommandBase teleopDrive(DriverController driverController) {
+        return run(() -> arcadeDrive(driverController.getThrottle(), driverController.getTurn())).withName("TeleopDrive (Throttle: " + driverController.getThrottle() + ", Turn: " + driverController.getTurn() + ")");
+    }
+
+    public CommandBase turnToAngle(DoubleSupplier setpoint) {
+        final PIDController turnPID = new PIDController(Constants.Drivetrain.kTurnP, Constants.Drivetrain.kTurnI, Constants.Drivetrain.kTurnD);
+        turnPID.setTolerance(Constants.Drivetrain.kTurnErrorThreshold, Constants.Drivetrain.kTurnVelocityThreshold);
+        turnPID.enableContinuousInput(-180, 180);
+        return runEnd(() -> {
+            double output = MathUtil.clamp(turnPID.calculate(getYaw(), setpoint.getAsDouble()), -0.26, 0.26);
+            if (Math.abs(output) < Constants.Drivetrain.kTurnFF) output = Math.signum(output) * Constants.Drivetrain.kTurnFF;
+            arcadeDrive(0, output);
+        }, () -> setDrivePower(0)).until(turnPID::atSetpoint).withName("TurnToAngle (" + setpoint.getAsDouble() + "deg)");
+    }
+
+    public CommandBase turnToAngle(double setpoint) {
+        return turnToAngle(() -> setpoint);
+    }
+
+    public CommandBase moveForward(double distanceMeters, double maxVel, double maxAccel) {
+        return new TrajectoryCommand(
+            this, Constants.Trajectory.trajectoryCreator.create(
+                List.of(new Waypoint(0, 0, 0, 1, 1), new Waypoint(distanceMeters, 0, 0, 1, 1)),
+                new TrajectoryConfig(maxVel, maxAccel).setReversed(false)
+            )
+        ).withName("MoveForward (" + distanceMeters + "m)");
+    }
+
+    public CommandBase moveForward(double distanceMeters) {
+        return moveForward(distanceMeters, Constants.Trajectory.kMaxSpeedMetersPerSecond, Constants.Trajectory.kMaxAccelerationMetersPerSecondSquared);
+    }
+
+    public CommandBase moveBackward(double distanceMeters, double maxVel, double maxAccel) {
+        return new TrajectoryCommand(
+                this, Constants.Trajectory.trajectoryCreator.create(
+                List.of(new Waypoint(0, 0, 0, 1, 1), new Waypoint(-distanceMeters, 0, 0, 1, 1)),
+                new TrajectoryConfig(maxVel, maxAccel).setReversed(true)
+            )
+        ).withName("MoveBackward (" + distanceMeters + "m)");
+    }
+
+    public CommandBase moveBackward(double distanceMeters) {
+        return moveBackward(distanceMeters, Constants.Trajectory.kMaxSpeedMetersPerSecond, Constants.Trajectory.kMaxAccelerationMetersPerSecondSquared);
     }
 }

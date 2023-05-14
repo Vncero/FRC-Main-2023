@@ -5,8 +5,7 @@ import com.revrobotics.CANSparkMax.IdleMode;
 import com.revrobotics.CANSparkMaxLowLevel.MotorType;
 import edu.wpi.first.wpilibj.DigitalInput;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.CommandBase;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.Constants.Intake.ScoreSpeed;
@@ -57,27 +56,32 @@ public class Intake extends SubsystemBase {
 
     // considering making the above methods for setting power return commands, gets repetitive to use runOnce() every time
     // with these command factories they're never used without being wrapped in a command
-    public Command ensureOff() {
-        return runOnce(this::off).withName("EnsureOff");
+
+    public CommandBase intakeOff() {
+        return runOnce(this::off).withName("IntakeOff");
     }
 
-    public Command intakeFor(ScoreSpeed speed, double seconds) {
-        return Commands.either(runOnce(this::intakeFast), runOnce(this::intakeSlow), () -> speed == ScoreSpeed.FAST)
-                   .andThen(Commands.waitSeconds(seconds))
-                   .andThen(ensureOff()).withName("IntakeFor");
+    public CommandBase intakeFor(ScoreSpeed speed, double seconds) {
+        return startEnd(speed == ScoreSpeed.FAST ? this::intakeFast : this::intakeSlow, this::off).withTimeout(seconds)
+//                Commands.either(runOnce(this::intakeFast), runOnce(this::intakeSlow), () -> speed == ScoreSpeed.FAST)
+//                   .andThen(Commands.waitSeconds(seconds))
+//                   .andThen(intakeOff()).
+            .withName("IntakeFor (Speed: " + speed + ", Time: " + seconds + "s)");
     }
 
-    public Command outtakeFor(ScoreSpeed speed, double seconds) {
-        return Commands.either(runOnce(this::outtakeFast), runOnce(this::outtakeSlow), () -> speed == ScoreSpeed.FAST)
-                   .andThen(Commands.waitSeconds(seconds))
-                   .andThen(ensureOff()).withName("OuttakeFor");
+    public CommandBase outtakeFor(ScoreSpeed speed, double seconds) {
+        return startEnd(speed == ScoreSpeed.FAST ? this::outtakeFast : this::outtakeSlow, this::off).withTimeout(seconds)
+//                Commands.either(runOnce(this::outtakeFast), runOnce(this::outtakeSlow), () -> speed == ScoreSpeed.FAST)
+//                   .andThen(Commands.waitSeconds(seconds))
+//                   .andThen(intakeOff())
+            .withName("OuttakeFor (Speed: " + speed + ", Time: " + seconds + "s)");
     }
 
-    public Command intakeElement(ScoreSpeed speed) {
-        return intakeFor(speed, Constants.Intake.kAutoIntakeSeconds).withName("IntakeElement");
+    public CommandBase intakeElement(ScoreSpeed speed) {
+        return intakeFor(speed, Constants.Intake.kAutoIntakeSeconds).withName("IntakeElement (Speed" + speed + ")");
     }
 
-    public Command outtakeElement(ScoreSpeed speed) {
-        return outtakeFor(speed, Constants.Intake.kAutoOuttakeSeconds).withName("OuttakeElement");
+    public CommandBase outtakeElement(ScoreSpeed speed) {
+        return outtakeFor(speed, Constants.Intake.kAutoOuttakeSeconds).withName("OuttakeElement (Speed" + speed + ")");
     }
 }
