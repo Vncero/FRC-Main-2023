@@ -12,6 +12,7 @@ import frc.robot.subsystems.drivetrain.commands.TeleopDrive;
 import frc.robot.subsystems.gyro.Gyro;
 import frc.robot.subsystems.intake.Intake;
 import frc.robot.subsystems.sidecamera.SideCamera;
+import frc.robot.subsystems.vision.photon.Vision;
 import frc.robot.util.Controller;
 import frc.robot.util.DriverController;
 import frc.robot.util.DriverController.Mode;
@@ -28,6 +29,8 @@ public class RobotContainer {
   private Intake intake = new Intake();
   private SideCamera sideCamera = new SideCamera(0, 1);
 
+  private final Vision vision = new Vision();
+
   private final AutoPicker autoPicker;
 
   public RobotContainer() {
@@ -38,6 +41,9 @@ public class RobotContainer {
     this.arm.setDefaultCommand(new RunToSetpoints(arm));
 
     this.intake.setDefaultCommand(new RunCommand(intake::off, intake));
+
+    // another nice concept from FRC Team 6328 Mechanical Advantage
+    vision.setInterfaces(drivetrain::addVisionData, drivetrain::getPoseEstimate);
 
     configureButtonBindings();
     doSendables();

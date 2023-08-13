@@ -5,6 +5,7 @@ import com.revrobotics.CANSparkMaxLowLevel;
 import com.revrobotics.RelativeEncoder;
 import com.revrobotics.CANSparkMax.IdleMode;
 
+import edu.wpi.first.math.estimator.DifferentialDrivePoseEstimator;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.math.kinematics.DifferentialDriveOdometry;
@@ -16,9 +17,12 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 import frc.robot.subsystems.gyro.Gyro;
+import frc.robot.subsystems.vision.photon.Vision;
 import frc.robot.util.Encoder;
 import frc.robot.util.enums.Displacement;
 import frc.robot.subsystems.vision.limelight.LimelightAPI;
+import org.photonvision.EstimatedRobotPose;
+import org.photonvision.targeting.PhotonPipelineResult;
 
 public class Drivetrain extends SubsystemBase {
     private final CANSparkMax leftMotor1 = new CANSparkMax(Constants.Drivetrain.LeftMotors.kLeftMotor1_Port, CANSparkMaxLowLevel.MotorType.kBrushless);
@@ -43,7 +47,9 @@ public class Drivetrain extends SubsystemBase {
 
     private final DifferentialDrive difDrive = new DifferentialDrive(leftMotors, rightMotors);
 
-    private final DifferentialDriveOdometry odometry;
+//    private final DifferentialDriveOdometry odometry;
+
+    private final DifferentialDrivePoseEstimator poseEstimator;
 
     // reverse the encoders to match the reversed motors of the right side.
     private final Encoder rightEncoder = new Encoder(rightMotor1.getEncoder());
@@ -106,18 +112,34 @@ public class Drivetrain extends SubsystemBase {
 
         resetEncoders();
 
-        odometry = new DifferentialDriveOdometry(gyro.getRotation2d(), leftEncoder.getPosition(), rightEncoder.getPosition());
+//        odometry = new DifferentialDriveOdometry(gyro.getRotation2d(), leftEncoder.getPosition(), rightEncoder.getPosition());
+        poseEstimator = new DifferentialDrivePoseEstimator(
+                Constants.Trajectory.kDriveKinematics,
+                gyro.getRotation2d(),
+                leftEncoder.getPosition(),
+                rightEncoder.getPosition(),
+                new Pose2d()
+        );
     }
 
     // Constantly updates the odometry of the robot with the rotation and the distance traveled.
     @Override
     public void periodic() {
-        odometry.update(gyro.getRotation2d(), leftEncoder.getPosition(), rightEncoder.getPosition());
-        m_field.setRobotPose(odometry.getPoseMeters());
+//        odometry.update(gyro.getRotation2d(), leftEncoder.getPosition(), rightEncoder.getPosition());
+//        m_field.setRobotPose(odometry.getPoseMeters());
+
+        poseEstimator.update(gyro.getRotation2d(), leftEncoder.getPosition(), rightEncoder.getPosition());
+        m_field.setRobotPose(getPoseEstimate());
+
         SmartDashboard.putData("field", m_field);
-        SmartDashboard.putNumber("x", odometry.getPoseMeters().getX());
-        SmartDashboard.putNumber("y", odometry.getPoseMeters().getY());
-        SmartDashboard.putNumber("rotation", getPose().getRotation().getDegrees());
+//        SmartDashboard.putNumber("x", odometry.getPoseMeters().getX());
+//        SmartDashboard.putNumber("y", odometry.getPoseMeters().getY());
+//        SmartDashboard.putNumber("rotation", getPose().getRotation().getDegrees());
+
+        SmartDashboard.putNumber("x", getPoseEstimate().getX());
+        SmartDashboard.putNumber("y", getPoseEstimate().getY());
+        SmartDashboard.putNumber("rotation", getPoseEstimate().getRotation().getDegrees());
+
         SmartDashboard.putNumber("yaw", getYaw()); 
         SmartDashboard.putNumber("encoderLeft", leftEncoder.getPosition());
         SmartDashboard.putNumber("encoderRight", rightEncoder.getPosition());
@@ -126,8 +148,9 @@ public class Drivetrain extends SubsystemBase {
     }
 
     // Returns the pose of the robot.
-    public Pose2d getPose() {
-        return odometry.getPoseMeters();
+    public Pose2d getPoseEstimate() {
+//        return odometry.getPoseMeters();
+        return poseEstimator.getEstimatedPosition();
     }
 
     // Returns the current speed of the wheels of the robot.
@@ -143,7 +166,8 @@ public class Drivetrain extends SubsystemBase {
     public void resetOdometry(Pose2d pose) {
         // gyro.zeroYaw();
         resetEncoders();
-        odometry.resetPosition(gyro.getRotation2d(), leftEncoder.getPosition(), rightEncoder.getPosition(), pose);
+//        odometry.resetPosition(gyro.getRotation2d(), leftEncoder.getPosition(), rightEncoder.getPosition(), pose);
+        poseEstimator.resetPosition(gyro.getRotation2d(), leftEncoder.getPosition(), rightEncoder.getPosition(), pose);
     }
 
     public void resetYaw() {
@@ -206,6 +230,14 @@ public class Drivetrain extends SubsystemBase {
         System.out.println("resetting encoders");
         leftEncoder.setPosition(0);
         rightEncoder.setPosition(0);
+    }
+
+    public void addVisionData(PhotonPipelineResult visionDataSource, EstimatedRobotPose visionPoseEstimate) {
+        poseEstimator.addVisionMeasurement(
+                visionPoseEstimate.estimatedPose.toPose2d(),
+                visionPoseEstimate.timestampSeconds,
+                Vision.calculateStdDevs(visionDataSource)
+        );
     }
 
     // These methods are never used?

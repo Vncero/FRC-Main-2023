@@ -241,6 +241,9 @@ public final class Constants {
     }
 
     public static class Vision {
+        public static final double kRotationStdDevCoeff = 0.01;
+        public static final double kTranslationStdDevCoeff = 0.1;
+
         public static final Transform3d kRobotToCameraTransform = new Transform3d(); // TODO: figure out
 
         public static final AprilTagFieldLayout kAprilTagFieldLayout = new AprilTagFieldLayout(
