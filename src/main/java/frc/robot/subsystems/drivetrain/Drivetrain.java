@@ -236,7 +236,7 @@ public class Drivetrain extends SubsystemBase {
         poseEstimator.addVisionMeasurement(
                 visionPoseEstimate.estimatedPose.toPose2d(),
                 visionPoseEstimate.timestampSeconds,
-                Vision.calculateStdDevs(visionDataSource)
+                Vision.calculateStdDevs(visionDataSource) // maybe make this a private instance method in Drivetrain
         );
     }
 

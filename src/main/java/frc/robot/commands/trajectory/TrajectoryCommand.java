@@ -99,7 +99,7 @@ public class TrajectoryCommand extends CommandBase
 
         this.velocity.setDouble(state.velocityMetersPerSecond);
         this.robotVelocity.setDouble(Constants.Trajectory.kDriveKinematics.toChassisSpeeds(subsystem.getWheelSpeeds()).vxMetersPerSecond);
-        Pose2d robotPose = subsystem.getPose(); 
+        Pose2d robotPose = subsystem.getPoseEstimate();
 
         SmartDashboard.putNumber("expectedX", state.poseMeters.getX()); 
         SmartDashboard.putNumber("robotX", robotPose.getX()); 
@@ -114,7 +114,7 @@ public class TrajectoryCommand extends CommandBase
             return;
         }
 
-        ChassisSpeeds speeds = ramseteController.calculate(subsystem.getPose(), state);
+        ChassisSpeeds speeds = ramseteController.calculate(subsystem.getPoseEstimate(), state);
 
         DifferentialDriveWheelSpeeds wheelSpeeds = Constants.Trajectory.kDriveKinematics.toWheelSpeeds(speeds);
 

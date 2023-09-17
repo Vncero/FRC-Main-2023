@@ -64,15 +64,16 @@ public class Vision extends VirtualSubsystem {
         this.prevEstimateSupplier = prevEstimateSupplier;
     }
 
+    // could be absolute nonsense
     public static Matrix<N3, N1> calculateStdDevs(PhotonPipelineResult result) {
         final double stdDev = result.getLatencyMillis() / result.getTargets().size();
 
         final double rotationStdDev = kRotationStdDevCoeff * stdDev;
 
+        final Translation3d robotPose = new Translation3d();
+
         // weighted average by ambiguity
         final double avgTargetDistance = result.getTargets().stream().mapToDouble(t -> {
-            final Translation3d robotPose = new Translation3d();
-
             final double bestCameraToTargetDistance = t.getBestCameraToTarget().getTranslation().getDistance(robotPose);
             final double altCameraToTargetDistance = t.getAlternateCameraToTarget().getTranslation().getDistance(robotPose);
 
